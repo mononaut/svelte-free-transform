@@ -1,6 +1,8 @@
 {
   "name": "svelte-free-transform",
-  "version": "1.0.2",
+  "version": "1.1.0",
+  "description": "A freely user-transformable container component for Svelte.",
+  "repository": "github:mononaut/svelte-free-transform",
   "private": false,
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -19,5 +21,11 @@
     "svelte": "^3.30.0"
   },
   "author": "mononaut",
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "svelte",
+    "drag",
+    "resize",
+    "rotate"
+  ]
 }
