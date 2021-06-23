@@ -10,10 +10,13 @@
   (i.e. styled with "position: relative/absolute/fixed/etc").
 */
 
+import { onMount } from 'svelte'
 import vector from './vector.js'
 
 // props
 export let position = { x: 0, y: 0, w: 100, h: 100, r: 0 }
+export let container
+export let target
 export let rotatorEnabled = false // Show a separate handle for rotation
 export let rotatorBar = false // Draw a line from the rotator handle to the frame
 export let handleMode = 'resize' // 'resize' or 'rotate'. Controls corner handle behaviour
@@ -29,16 +32,24 @@ let startPosition = {
   h: null,
   r: null
 }
-
+// Target element is this component (so apply calculated style directly)
+let selfStyled = false
+$: {
+  selfStyled = target === element
+}
 // DOMRects of the component and parent element
-let parentBounds, bounds
+let containerBounds, bounds
 // Map of active pointers
 const pointers = {}
 // Number of active pointers
 let pointerCount = 0
 // References to DOM elements
-let element, wrapper, handleTR, handleTL, handleBR, handleBL, rotatorHandle
+let element, handleTR, handleTL, handleBR, handleBL, rotatorHandle
 
+onMount(() => {
+  if (!target) target = element
+  if (!container) container = target.parentNode
+})
 
 function isDragging (pointer) {
   return pointer && pointer.target && pointer.target.type === 'body' && pointerCount === 1
@@ -53,6 +64,10 @@ function isFreeTransforming (pointer) {
   return pointer && pointer.target && pointer.target.type !== 'handle' && pointerCount > 1
 }
 
+$: {
+  position.style = stylePosition(position)
+}
+
 const stylePropMap = {
   x: 'left',
   y: 'top',
@@ -62,7 +77,7 @@ const stylePropMap = {
 
 // Convert position to a CSS style string
 function stylePosition (pos) {
-  return ['x', 'y', 'w', 'h'].map(prop => {
+  return 'position: absolute; ' + ['x', 'y', 'w', 'h'].map(prop => {
     if (pos[prop] != null) return `${stylePropMap[prop]}: ${pos[prop]}px; `
     else return ''
   }).join(' ') + `; transform: rotate(${pos.r}rad)`
@@ -155,8 +170,8 @@ function doFreeTransform (pointerA, pointerB, noRotate, noScale) {
 
   const tlToOrigin = vector.sub(bounds.center, startPosition)
   const tlvec = vector.add(vector.add(tlToOrigin, transform.translate), { x: -(position.w / 2), y: -(position.h / 2) })
-  position.x = startPosition.x + tlvec.x - parentBounds.left
-  position.y = startPosition.y + tlvec.y - parentBounds.top
+  position.x = startPosition.x + tlvec.x - containerBounds.left
+  position.y = startPosition.y + tlvec.y - containerBounds.top
   position.r = startPosition.r + transform.rotate
 }
 
@@ -181,7 +196,7 @@ function getPointerTarget (evt) {
 }
 
 function pointerDown (evt) {
-  let target = getPointerTarget(evt)
+  let pointerTarget = getPointerTarget(evt)
   let pointer = pointers[evt.pointerId]
 
   // Add the pointer to active pointers map
@@ -198,19 +213,19 @@ function pointerDown (evt) {
         x: evt.pageX,
         y: evt.pageY
       },
-      target
+      target: pointerTarget
     }
     pointers[evt.pointerId] = pointer
   } else { // or update, if it's already there
     pointer.end.x = evt.pageX
     pointer.end.y = evt.pageY
-    pointer.target = target
+    pointer.target = pointerTarget
   }
 
   // If the pointer is enabled (one of the first two active pointers)
   if (pointer.priority < 2) {
-    bounds = getFullBounds(wrapper)
-    parentBounds = getFullBounds(element.parentNode)
+    bounds = getFullBounds(target)
+    containerBounds = getFullBounds(container)
 
     // There's another active enabled pointer
     if (pointerCount > 1) {
@@ -231,13 +246,13 @@ function pointerDown (evt) {
 
     // If the pointer is dragging a corner handle, record the position of the
     // opposite corner (to anchor resizing events)
-    if (target.type === 'handle') {
+    if (pointerTarget.type === 'handle') {
       let oppositeHandle
-      if (target.top) {
-        if (target.right) oppositeHandle = handleBL
+      if (pointerTarget.top) {
+        if (pointerTarget.right) oppositeHandle = handleBL
         else oppositeHandle = handleBR
       } else {
-        if (target.right) oppositeHandle = handleTL
+        if (pointerTarget.right) oppositeHandle = handleTL
         else oppositeHandle = handleTR
       }
       // handles are centered on the corresponding corner of the component frame
@@ -285,6 +300,7 @@ function pointerMove (evt) {
       doFreeTransform(pointer, pointerB, false, (multitouch && lockTouchResize))
     }
   }
+  evt.preventDefault()
 }
 
 // Clean up after a pointer is removed and the gesture is ended
@@ -324,13 +340,11 @@ function pointerUp (evt) {
 
 <div
   class="free-transform"
-  style="
-    {stylePosition(position)}
-  "
   on:pointerdown={pointerDown}
   bind:this={element}
+  style={selfStyled ? position.style : null}
 >
-  <div class="frame" bind:this={wrapper}>
+  <div class="frame">
     <div class="handle corner top right" bind:this={handleTR}><slot name="handle"><div class="handle-shape" /></slot></div>
     <div class="handle corner bottom right" bind:this={handleBR}><slot name="handle"><div class="handle-shape" /></slot></div>
     <div class="handle corner bottom left" bind:this={handleBL}><slot name="handle"><div class="handle-shape" /></slot></div>
@@ -354,6 +368,10 @@ function pointerUp (evt) {
 
   .free-transform {
     position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     transform-origin: center;
     touch-action: none;
   }
