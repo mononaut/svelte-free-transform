@@ -26,30 +26,30 @@ Set an initial position using the `position` prop.
 </script>
 
 <div class="transform-area">
-	<FreeTransform
-		position={{
-			x: 0,
-			y: 0,
-			w: 100,
-			h: 100,
-			r: 0
-		}}
-		handleMode="resize"
-		rotatorEnabled
-		rotatorBar
-	>
-		<content />
-		<!-- override corner handle  (optional)-->
-		<div slot="handle" />
-		<!-- override rotation handle  (optional)-->
-		<div slot="rotator" />
-	</FreeTransform>
+  <FreeTransform
+    position={{
+      x: 0,
+      y: 0,
+      w: 100,
+      h: 100,
+      r: 0
+    }}
+    handleMode="resize"
+    rotatorEnabled
+    rotatorBar
+  >
+    <content />
+    <!-- override corner handle  (optional)-->
+    <div slot="handle" />
+    <!-- override rotation handle  (optional)-->
+    <div slot="rotator" />
+  </FreeTransform>
 </div>
 
 <style>
-	.transform-area {
-		position: relative;
-	}
+  .transform-area {
+    position: relative;
+  }
 </style>
 ```
 
@@ -66,22 +66,22 @@ We can also wrap the `<FreeTransform />` element in another div (for example, if
     bind:this={wrapper}
     style={myPosition.style}
   >
-  	<FreeTransform
-  		bind:position={myPosition}
+    <FreeTransform
+      bind:position={myPosition}
       target={wrapper}
-  		handleMode="resize"
-  		rotatorEnabled
-  		rotatorBar
-  	>
-  		<content />
-  	</FreeTransform>
+      handleMode="resize"
+      rotatorEnabled
+      rotatorBar
+    >
+      <content />
+    </FreeTransform>
   </div>
 </div>
 
 <style>
-	.transform-area {
-		position: relative;
-	}
+  .transform-area {
+    position: relative;
+  }
 </style>
 ```
 

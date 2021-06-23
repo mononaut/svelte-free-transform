@@ -1,6 +1,6 @@
 {
   "name": "svelte-free-transform",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "A freely user-transformable container component for Svelte.",
   "repository": "github:mononaut/svelte-free-transform",
   "private": false,
