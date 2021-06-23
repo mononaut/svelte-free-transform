@@ -12,6 +12,9 @@
 
 import { onMount } from 'svelte'
 import vector from './vector.js'
+import { createEventDispatcher } from 'svelte';
+
+const dispatch = createEventDispatcher();
 
 // props
 export let position = { x: 0, y: 0, w: 100, h: 100, r: 0 }
@@ -32,6 +35,7 @@ let startPosition = {
   h: null,
   r: null
 }
+let transformInProgress = false
 // Target element is this component (so apply calculated style directly)
 let selfStyled = false
 $: {
@@ -222,6 +226,8 @@ function pointerDown (evt) {
     pointer.target = pointerTarget
   }
 
+  transformInProgress = false
+
   // If the pointer is enabled (one of the first two active pointers)
   if (pointer.priority < 2) {
     bounds = getFullBounds(target)
@@ -275,6 +281,8 @@ function pointerMove (evt) {
   let pointer = pointers[evt.pointerId]
   // Ignore unless pointer is enabled (one of the first two active pointers)
   if (pointer && pointer.priority < 2) {
+    transformInProgress = true
+
     // update the on-screen position
     pointer.end.x = evt.pageX
     pointer.end.y = evt.pageY
@@ -300,7 +308,6 @@ function pointerMove (evt) {
       doFreeTransform(pointer, pointerB, false, (multitouch && lockTouchResize))
     }
   }
-  evt.preventDefault()
 }
 
 // Clean up after a pointer is removed and the gesture is ended
@@ -331,6 +338,10 @@ function pointerUp (evt) {
     })
   }
 }
+
+function contentClick (evt) {
+  if (!transformInProgress) dispatch('click', evt.detail)
+}
 </script>
 
 <svelte:window
@@ -358,6 +369,7 @@ function pointerUp (evt) {
   </div>
   <div class="contents">
     <slot />
+    <div class="click-blocker" on:click={contentClick} />
   </div>
 </div>
 
@@ -382,7 +394,15 @@ function pointerUp (evt) {
     left: 0;
     right: 0;
     bottom: 0;
-    pointer-events: none;
+  }
+
+  .click-blocker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    cursor: move;
   }
 
   .frame {
@@ -391,7 +411,6 @@ function pointerUp (evt) {
     left: 0;
     right: 0;
     bottom: 0;
-    cursor: move;
 
     border: var(--frameBorder);
   }
