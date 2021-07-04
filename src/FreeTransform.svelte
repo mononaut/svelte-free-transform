@@ -307,6 +307,8 @@ function pointerMove (evt) {
       }
       doFreeTransform(pointer, pointerB, false, (multitouch && lockTouchResize))
     }
+
+    onChange()
   }
 }
 
@@ -342,6 +344,10 @@ function pointerUp (evt) {
 function contentClick (evt) {
   if (!transformInProgress) dispatch('click', evt.detail)
 }
+
+function onChange () {
+  dispatch('positionChanged', position)
+}
 </script>
 
 <svelte:window
@@ -355,7 +361,10 @@ function contentClick (evt) {
   bind:this={element}
   style={selfStyled ? position.style : null}
 >
-  <div class="frame">
+  <div class="contents">
+    <slot />
+  </div>
+  <div class="frame" on:click={contentClick}>
     <div class="handle corner top right" bind:this={handleTR}><slot name="handle"><div class="handle-shape" /></slot></div>
     <div class="handle corner bottom right" bind:this={handleBR}><slot name="handle"><div class="handle-shape" /></slot></div>
     <div class="handle corner bottom left" bind:this={handleBL}><slot name="handle"><div class="handle-shape" /></slot></div>
@@ -366,10 +375,6 @@ function contentClick (evt) {
         {#if rotatorBar }<div class="rotator-bar" />{/if}
       </div>
     {/if}
-  </div>
-  <div class="contents">
-    <slot />
-    <div class="click-blocker" on:click={contentClick} />
   </div>
 </div>
 
@@ -396,21 +401,13 @@ function contentClick (evt) {
     bottom: 0;
   }
 
-  .click-blocker {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    cursor: move;
-  }
-
   .frame {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    cursor: move;
 
     border: var(--frameBorder);
   }
@@ -462,6 +459,7 @@ function contentClick (evt) {
   .handle.rotator {
     left: 50%;
     top: -30px;
+    transform: translateX(-50%);
   }
 
   .rotator-bar {
