@@ -12,14 +12,14 @@
 
 import { onMount } from 'svelte'
 import vector from './vector.js'
-import { createEventDispatcher } from 'svelte';
+import { createEventDispatcher, tick } from 'svelte';
 
 const dispatch = createEventDispatcher();
 
 // props
 export let position = { x: 0, y: 0, w: 100, h: 100, r: 0 }
-export let container
-export let target
+export let target = null
+export let container = null
 export let rotatorEnabled = false // Show a separate handle for rotation
 export let rotatorBar = false // Draw a line from the rotator handle to the frame
 export let handleMode = 'resize' // 'resize' or 'rotate'. Controls corner handle behaviour
@@ -41,8 +41,8 @@ let selfStyled = false
 $: {
   selfStyled = target === element
 }
-// DOMRects of the component and parent element
-let containerBounds, bounds
+// DOMRects of the component and parent element, and the FreeTransform element itself
+let containerBounds, bounds, selfBounds
 // Map of active pointers
 const pointers = {}
 // Number of active pointers
@@ -70,6 +70,7 @@ function isFreeTransforming (pointer) {
 
 $: {
   position.style = stylePosition(position)
+  onBoundsChange()
 }
 
 const stylePropMap = {
@@ -275,6 +276,7 @@ function pointerDown (evt) {
       delete pointers.anchor
     }
   }
+  onChange()
 }
 
 function pointerMove (evt) {
@@ -347,6 +349,13 @@ function contentClick (evt) {
 
 function onChange () {
   dispatch('positionChanged', position)
+}
+async function onBoundsChange() {
+  await tick()
+  if (element) {
+    selfBounds = element.getBoundingClientRect()
+    dispatch('boundsChanged', selfBounds)
+  }
 }
 </script>
 
