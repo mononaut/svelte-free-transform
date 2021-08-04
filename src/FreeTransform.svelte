@@ -25,6 +25,7 @@ export let rotatorBar = false // Draw a line from the rotator handle to the fram
 export let handleMode = 'resize' // 'resize' or 'rotate'. Controls corner handle behaviour
 export let lockAspect = false // Is the aspect ratio fixed?
 export let lockTouchResize = false // Can the size be changed by multitouch gestures?
+export let captureClicks = true // allow clicks on the content area? if false, clicks fall through
 
 // the position at the start of each gesture
 // transformations are calculated relative to this
@@ -366,6 +367,7 @@ async function onBoundsChange() {
 
 <div
   class="free-transform"
+  class:noclicks={!captureClicks}
   on:pointerdown={pointerDown}
   bind:this={element}
   style={selfStyled ? position.style : null}
@@ -401,6 +403,9 @@ async function onBoundsChange() {
     transform-origin: center;
     touch-action: none;
   }
+  .free-transform.noclicks {
+    pointer-events: none;
+  }
 
   .contents {
     position: absolute;
@@ -408,6 +413,9 @@ async function onBoundsChange() {
     left: 0;
     right: 0;
     bottom: 0;
+  }
+  .free-transform.noclicks .contents {
+    pointer-events: none;
   }
 
   .frame {
@@ -420,12 +428,16 @@ async function onBoundsChange() {
 
     border: var(--frameBorder);
   }
+  .free-transform.noclicks .frame {
+    pointer-events: none;
+  }
 
   .handle {
     position: absolute;
     user-select: none;
     touch-action: none;
     cursor: grab;
+    pointer-events: auto;
   }
 
   .handle:active {
